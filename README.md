@@ -22,7 +22,7 @@ O projeto também pode ser publicado como site estático. As páginas internas u
 
 No desktop, o header usa a logo horizontal fornecida pela Marquesa, centralizada acima da navegação. No celular, permanece a marca textual do header original. Os títulos usam Bodoni Moda, os textos de interface usam DM Sans e a marca textual do celular conserva Cormorant Garamond. As fontes estão incluídas em `assets/fonts` com suas licenças OFL, para que a aparência não dependa do carregamento do Google Fonts.
 
-A imagem principal da página inicial foi criada para o protótipo e fica em `assets/hero-marquesa-campanha.webp`.
+A imagem principal da página inicial foi criada para o protótipo. O desktop usa `assets/hero-marquesa-campanha.webp`; o celular usa a composição vertical `assets/hero-marquesa-mobile.webp`, com o texto sobre a própria fotografia.
 
 ## O que funciona
 
