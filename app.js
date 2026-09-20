@@ -83,23 +83,30 @@ function art(product, extraClass = '') {
 }
 
 function header() {
-  return `<div class="announcement">Sua rotina de beleza começa aqui <span aria-hidden="true">✦</span> Catálogo demonstrativo</div>
+  const { path, params } = route();
+  const category = params.get('categoria') || 'Todos';
+  const showShortcuts = path === '/' || path === '/catalogo';
+  const shortcuts = ['Todos', 'Maquiagem', 'Skincare', 'Cabelos', 'Perfumaria'];
+  return `<div class="announcement"><span class="announcement-desktop">Sua rotina de beleza começa aqui <span aria-hidden="true">✦</span> Catálogo demonstrativo</span><span class="announcement-mobile">Marquesa · catálogo demonstrativo</span></div>
     <header class="site-header">
       <div class="container header-inner">
-        <button class="icon-button mobile-menu-button" type="button" data-action="toggle-menu" aria-label="${state.menuOpen ? 'Fechar menu' : 'Abrir menu'}" aria-expanded="${state.menuOpen}">${icon(state.menuOpen ? 'close' : 'menu')}</button>
-        <a class="brand" href="#/" aria-label="Marquesa, voltar ao início"><img src="./assets/marquesa-logo.png" alt="Marquesa — A Loja da Beleza" /></a>
+        <button class="icon-button mobile-menu-button" type="button" data-action="toggle-menu" aria-label="${state.menuOpen ? 'Fechar menu' : 'Abrir menu'}" aria-expanded="${state.menuOpen}" ${state.menuOpen ? 'aria-controls="mobile-navigation"' : ''}>${icon(state.menuOpen ? 'close' : 'menu')}</button>
+        <a class="brand" href="#/" aria-label="Marquesa, voltar ao início"><img src="./assets/marquesa-logo.png" alt="Marquesa — A Loja da Beleza" /><span class="brand-wordmark" aria-hidden="true"><strong>Marquesa</strong><small>A Loja da Beleza</small></span></a>
         <nav class="site-nav" aria-label="Navegação principal">
           <a href="#/">Início</a><a href="#/catalogo">Todos os produtos</a><a href="#/catalogo?categoria=Maquiagem">Maquiagem</a><a href="#/catalogo?categoria=Skincare">Skincare</a><a href="#/catalogo?categoria=Perfumaria">Perfumaria</a>
         </nav>
         <div class="header-actions">
-          <button class="icon-button" type="button" data-action="toggle-search" aria-label="Abrir busca" aria-expanded="${state.searchOpen}">${icon('search')}</button>
+          <button class="icon-button desktop-search-button" type="button" data-action="toggle-search" aria-label="Abrir busca" aria-expanded="${state.searchOpen}">${icon('search')}</button>
           <a class="icon-button favorites-link" href="#/favoritos" aria-label="Favoritos${favoriteIds().length ? `, ${favoriteIds().length} produtos` : ''}">${icon('heart')}<span class="action-label">Favoritos</span></a>
           <button class="icon-button bag-button" type="button" data-action="open-cart" aria-label="Abrir carrinho com ${cartCount()} ${cartCount() === 1 ? 'produto' : 'produtos'}">${icon('bag')}<span class="action-label">Carrinho</span>${cartCount() ? `<span class="cart-count">${cartCount()}</span>` : ''}</button>
         </div>
       </div>
+      <form class="mobile-search container" data-form="search" role="search"><label class="sr-only" for="mobile-search-input">Buscar produtos</label><div class="mobile-search-field">${icon('search')}<input id="mobile-search-input" name="q" type="search" placeholder="Busque seus favoritos" autocomplete="off" required /><button type="submit" aria-label="Buscar produtos">${icon('arrow')}</button></div></form>
       ${state.searchOpen ? `<form class="header-search container" data-form="search" role="search"><label for="header-search-input">O que você está procurando?</label><div class="search-row"><input id="header-search-input" name="q" type="search" placeholder="Buscar produtos de beleza" autocomplete="off" required /><button class="button button-primary" type="submit">Buscar</button></div></form>` : ''}
-      ${state.menuOpen ? `<nav class="mobile-nav" aria-label="Menu mobile"><a href="#/">Início</a><a href="#/catalogo">Todos os produtos</a>${categories.slice(1).map((category) => `<a href="#/catalogo?categoria=${encodeURIComponent(category)}">${category}</a>`).join('')}<a href="#/favoritos">Favoritos</a></nav>` : ''}
-    </header>`;
+      ${state.menuOpen ? `<nav class="mobile-nav" id="mobile-navigation" aria-label="Menu mobile"><div class="mobile-nav-intro"><span class="eyebrow">Explore a Marquesa</span><strong>Beleza para cada momento</strong></div><a class="mobile-nav-feature" href="#/catalogo">Ver todos os produtos ${icon('arrow')}</a><span class="mobile-nav-label">Categorias</span><div class="mobile-nav-grid">${categories.slice(1).map((item) => `<a href="#/catalogo?categoria=${encodeURIComponent(item)}">${item} ${icon('arrow')}</a>`).join('')}</div><div class="mobile-nav-utility"><a href="#/favoritos">${icon('heart')} Favoritos</a><a href="#/carrinho">${icon('bag')} Meu carrinho</a></div></nav>` : ''}
+    </header>
+    ${state.menuOpen ? '<button class="nav-backdrop" type="button" tabindex="-1" data-action="close-menu" aria-label="Fechar menu"></button>' : ''}
+    ${showShortcuts ? `<nav class="mobile-shortcuts" aria-label="Categorias rápidas"><div class="container mobile-shortcuts-inner">${shortcuts.map((item) => `<a href="#/catalogo${item === 'Todos' ? '' : `?categoria=${encodeURIComponent(item)}`}" ${path === '/catalogo' && category === item ? 'aria-current="page"' : ''}>${item === 'Todos' ? 'Ver tudo' : item}</a>`).join('')}</div></nav>` : ''}`;
 }
 
 function footer() {
@@ -220,8 +227,11 @@ function render(scroll = false) {
   app.innerHTML = `<button class="skip-link" type="button" data-action="skip-content">Pular para o conteúdo</button>${header()}${page}${footer()}${cartDrawer()}<div class="toast" id="app-toast" role="status" aria-live="polite" hidden></div>`;
   app.querySelector('main')?.setAttribute('tabindex', '-1');
   document.body.classList.toggle('has-drawer', state.cartOpen);
+  document.body.classList.toggle('has-menu', state.menuOpen);
   document.title = `${path === '/' ? 'Sua rotina de beleza começa aqui' : path === '/catalogo' ? 'Produtos' : path === '/carrinho' ? 'Meu carrinho' : path === '/checkout' ? 'Checkout demonstrativo' : path === '/favoritos' ? 'Favoritos' : path === '/sucesso' ? 'Simulação concluída' : path.startsWith('/produto/') ? productById.get(path.slice(9))?.name || 'Produto' : 'Página'} | Marquesa`;
-  for (const element of app.querySelectorAll('.site-header, main, .site-footer, .skip-link')) element.inert = state.cartOpen;
+  for (const element of app.querySelectorAll('.site-header, main, .site-footer, .skip-link, .mobile-shortcuts')) {
+    element.inert = state.cartOpen || (state.menuOpen && !element.matches('.site-header'));
+  }
   if (scroll) window.scrollTo({ top: 0, behavior: 'auto' });
   if (state.cartOpen) app.querySelector('.cart-drawer [data-action="close-cart"]')?.focus();
 }
@@ -255,7 +265,14 @@ app.addEventListener('click', (event) => {
       main?.focus();
       break;
     }
-    case 'toggle-menu': state.menuOpen = !state.menuOpen; state.searchOpen = false; render(); break;
+    case 'toggle-menu': {
+      state.menuOpen = !state.menuOpen;
+      state.searchOpen = false;
+      render();
+      app.querySelector(state.menuOpen ? '.mobile-nav-feature' : '.mobile-menu-button')?.focus();
+      break;
+    }
+    case 'close-menu': state.menuOpen = false; render(); app.querySelector('.mobile-menu-button')?.focus(); break;
     case 'toggle-search': state.searchOpen = !state.searchOpen; state.menuOpen = false; render(); app.querySelector('#header-search-input')?.focus(); break;
     case 'open-cart': state.cartOpen = true; state.menuOpen = false; render(); break;
     case 'close-cart': state.cartOpen = false; render(); app.querySelector('[data-action="open-cart"]')?.focus(); break;
@@ -329,9 +346,10 @@ document.addEventListener('keydown', (event) => {
   }
   if (event.key === 'Escape') {
     if (state.cartOpen) { state.cartOpen = false; render(); app.querySelector('[data-action="open-cart"]')?.focus(); }
-    else if (state.menuOpen || state.searchOpen) { state.menuOpen = false; state.searchOpen = false; render(); }
+    else if (state.menuOpen || state.searchOpen) { const wasMenuOpen = state.menuOpen; state.menuOpen = false; state.searchOpen = false; render(); app.querySelector(wasMenuOpen ? '.mobile-menu-button' : '.desktop-search-button')?.focus(); }
   }
 });
 
 window.addEventListener('hashchange', () => { state.cartOpen = false; state.menuOpen = false; state.searchOpen = false; render(true); });
+window.addEventListener('resize', () => { if (window.innerWidth >= 900 && state.menuOpen) { state.menuOpen = false; render(); } });
 render();
